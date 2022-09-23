@@ -1,4 +1,5 @@
 import random
+import csv
 from pathlib import Path
 from pyglet.math import Vec2
 
@@ -71,30 +72,15 @@ class MyGame(arcade.Window):
         self.shadertoy.channel_1 = self.channel1.color_attachments[0]
 
     def generate_sprites(self):
-        # -- Set up several columns of walls
-        # for x in range(0, PLAYING_FIELD_WIDTH, 128):
-        #     for y in range(0, PLAYING_FIELD_HEIGHT, int(128 * SPRITE_SCALING)):
-        #         # Randomly skip a box so the player can find a way through
-        #         if random.randrange(2) > 0:
-        #             wall = arcade.Sprite(":resources:images/tiles/boxCrate_double.png", SPRITE_SCALING)
-        #             wall.center_x = x
-        #             wall.center_y = y
-                    # self.wall_list.append(wall)
-
-        matrix = [[0,0,0,0,0,0,0,0,0,0], [0,-1,0,-1,-1,-1,-1,-1,-1,0], [0,-1,0,-1,0,0,0,0,-1,0], [0,-1,0,-1,0,-1,-1,0,-1,0], [0,-1,0,-1,0,-1,-1,0,-1,0], [0,-1,0,-1,0,0,-1,0,-1,0], [0,-1,0,-1,-1,-1,-1,0,-1,0], [0,-1,0,0,0,0,0,0,-1,0], [0,-1,-1,-1,-1,-1,-1,-1,-1,0], [0,0,0,0,0,0,0,0,0,0]]
-
-        # 60 * 128
-        # for x in range(0, 10 * 128, int(128 * SPRITE_SCALING)):
-        #     for y in range (0, 10 * 128, int(128 * SPRITE_SCALING)):
-        #         if (matrix[int(x / 128)][int(y / 128)] == 0):
-        #             wall = arcade.Sprite(":resources:images/tiles/boxCrate_double.png", SPRITE_SCALING)
-        #             wall.center_x = x;
-        #             wall.center_y = y;
-        #             self.wall_list.append(wall)
-
-        for x in range (0, 10, 1):
-            for y in range (0, 10, 1):
-                if (matrix[x][y] == 0):
+        # Lê tiles do arquivo e coloca na matriz de posições
+        with open('mapa2.csv') as f:
+            reader = csv.reader(f)
+            matrix = [row for row in reader]
+        
+        # Desenha as paredes
+        for x in range (0, len(matrix), 1):
+            for y in range (0, len(matrix[0]), 1):
+                if (matrix[x][y] == '0'):
                     wall = arcade.Sprite(":resources:images/tiles/boxCrate_double.png", SPRITE_SCALING)
                     wall.center_x = x * 128 * SPRITE_SCALING
                     wall.center_y = y * 128 * SPRITE_SCALING
