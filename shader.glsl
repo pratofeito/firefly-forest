@@ -1,5 +1,5 @@
 #define N 100
-#define OBJS 4
+#define OBJS 6
 
 // x, y position of the light
 uniform vec2 lightPosition;
@@ -12,12 +12,16 @@ uniform vec2 light_1;
 uniform vec2 light_2;
 uniform vec2 light_3;
 uniform vec2 light_4;
+uniform vec2 light_5;
+uniform vec2 light_6;
 
 // intensidade das luzes
 uniform float light_size_1;
 uniform float light_size_2;
 uniform float light_size_3;
 uniform float light_size_4;
+uniform float light_size_5;
+uniform float light_size_6;
 
 
 // basicamente verificando as paredes do chanel0
@@ -38,12 +42,16 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     lights[1] = light_2;
     lights[2] = light_3;
     lights[3] = light_4;
+    lights[4] = light_5;
+    lights[5] = light_6;
 
     float light_sizes[OBJS];
     light_sizes[0] = light_size_1;
     light_sizes[1] = light_size_2;
     light_sizes[2] = light_size_3;
     light_sizes[3] = light_size_4;
+    light_sizes[4] = light_size_5;
+    light_sizes[5] = light_size_6;
 
 
     float distances_light[OBJS];
@@ -94,38 +102,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     for (int i = 0; i < OBJS; i++) {
         light_sum += light_amount[i];
     }
-
-    // // Start our mixing variable at 1.0
-    // float lightAmount = 1.0;
-    // for(float i = 0.0; i < N; i++)
-    // {
-    //     // A 0.0 - 1.0 ratio between where our current pixel is, and where the light is
-    //     float t = i / N;
-    //     // Grab a coordinate between where we are and the light
-    //     vec2 samplePoint = mix(normalizedFragCoord, normalizedLightCoord, t);
-    //     // Is there something there? If so, we'll assume we are in shadow
-	//     float shadowAmount = terrain(samplePoint);
-    //     // Multiply the light amount.
-    //     // (Multiply in case we want to upgrade to soft shadows)
-    //     lightAmount *= shadowAmount;
-    // }
-    // lightAmount *= 1.0 - smoothstep(0.0, lightSize, distanceToLight);
-
-    
-    // float lightAmount2 = 1.0;
-    // for(float i = 0.0; i < N; i++)
-    // {
-    //     // A 0.0 - 1.0 ratio between where our current pixel is, and where the light is
-    //     float t = i / N;
-    //     // Grab a coordinate between where we are and the light
-    //     vec2 samplePoint = mix(normalizedFragCoord, normalizedLight2Coord, t);
-    //     // Is there something there? If so, we'll assume we are in shadow
-	//     float shadowAmount = terrain(samplePoint);
-    //     // Multiply the light amount.
-    //     // (Multiply in case we want to upgrade to soft shadows)
-    //     lightAmount2 *= shadowAmount;
-    // }
-    // lightAmount2 *= 1.0 - smoothstep(0.0, lightSize, distanceToLight2);
 
     // We'll alternate our display between black and whatever is in channel 1
     vec4 blackColor = vec4(0.0, 0.0, 0.0, 1.0);

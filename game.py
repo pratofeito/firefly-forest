@@ -1,5 +1,6 @@
 import random
 import csv
+import math
 from pathlib import Path
 from pyglet.math import Vec2
 
@@ -34,6 +35,9 @@ class MyGame(arcade.Window):
         self.channel1 = None
         self.load_shader()
 
+        # Don't show the mouse cursor
+        self.set_mouse_visible(False)
+
         # Sprites and sprite lists
         self.player_sprite = None
         self.second_player = None
@@ -51,13 +55,16 @@ class MyGame(arcade.Window):
         # cara
         self.cara = None
 
+        # vagalumes
+        self.coin_list = None
+
         # Create cameras used for scrolling
         self.camera_sprites = arcade.Camera(width, height)
         self.camera_gui = arcade.Camera(width, height)
 
         self.generate_sprites()
 
-        arcade.set_background_color(arcade.color.GRAY)
+        arcade.set_background_color(arcade.color.AMAZON)
 
     def load_shader(self):
         # Where is the shader file? Must be specified as a path.
@@ -122,6 +129,28 @@ class MyGame(arcade.Window):
         self.cara = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
                                            scale=SPRITE_SCALING*10)
 
+        # vagalumes e cria os vagalumes
+        self.coin_list = arcade.SpriteList()
+        coin_1 = Coin(":resources:images/items/coinGold.png", SPRITE_SCALING / 3)
+        coin_2 = Coin(":resources:images/items/coinGold.png", SPRITE_SCALING / 3)
+        
+        coin_1.circle_center_x = 2560 * SCALE
+        coin_1.circle_center_y = 300 * SCALE
+        coin_2.circle_center_x = 2560 * SCALE
+        coin_2.circle_center_y = 600 * SCALE
+
+        coin_1.random_center = random.randrange(0, 20)
+        coin_1.random_speed = random.randrange(1, 10)/100
+        coin_1.circle_radius = random.randrange(30, 50)
+        coin_1.circle_angle = random.random() * 2 * math.pi
+        coin_2.random_center = random.randrange(0, 20)
+        coin_2.random_speed = random.randrange(1, 10)/100
+        coin_2.circle_radius = random.randrange(30, 50)
+        coin_2.circle_angle = random.random() * 2 * math.pi
+
+        self.coin_list.append(coin_1)
+        self.coin_list.append(coin_2)
+
     def on_draw(self):
         # Use our scrolled camera
         self.camera_sprites.use()
@@ -155,6 +184,12 @@ class MyGame(arcade.Window):
              300 - self.camera_sprites.position[1])
 
 
+        # posições dos vagalumes
+        p5 = (self.coin_list[0].position[0] - self.camera_sprites.position[0],
+             self.coin_list[0].position[1] - self.camera_sprites.position[1])
+        p6 = (self.coin_list[1].position[0] - self.camera_sprites.position[0],
+             self.coin_list[1].position[1] - self.camera_sprites.position[1])
+
         #diminui a intensidade da luz do player
         light_step = 50
         if (self.player_light_status == True):
@@ -164,15 +199,23 @@ class MyGame(arcade.Window):
             if(self.player_light_intensity != 0):
                 self.player_light_intensity -= light_step
 
-        # Set the uniform data
+        # Luzes do player e de teste
         self.shadertoy.program['light_1'] = p
         self.shadertoy.program['light_2'] = p2   
         self.shadertoy.program['light_3'] = p3
         self.shadertoy.program['light_4'] = p4
+
+        # Luzes do vagalume
+        self.shadertoy.program['light_5'] = p5
+        self.shadertoy.program['light_6'] = p6
+
+
         self.shadertoy.program['light_size_1'] = self.player_light_intensity
         self.shadertoy.program['light_size_2'] = 100
         self.shadertoy.program['light_size_3'] = 200
         self.shadertoy.program['light_size_4'] = 50
+        self.shadertoy.program['light_size_5'] = 70
+        self.shadertoy.program['light_size_6'] = 70
         
         # Run the shader and render to the window
         self.shadertoy.render() # aqui !!!!
@@ -183,6 +226,9 @@ class MyGame(arcade.Window):
         # Draw the player
         self.player_list.draw()
         self.second_player_list.draw()
+
+        # desenha os vagalumes
+        self.coin_list.draw()
 
         # cara
         self.cara.center_x = self.camera_sprites.position[0]
@@ -226,6 +272,21 @@ class MyGame(arcade.Window):
         # Scroll the screen to the player
         self.scroll_to_player()
 
+        # vagalumes
+        self.coin_list.update()
+
+        # Generate a list of all sprites that collided with the player.
+        hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
+        for coin in hit_list:
+            coin.followed = True
+
+        for coin in self.coin_list:
+            if coin.followed == True:
+             coin.giro(self.player_sprite, coin.random_center, coin.random_speed)
+             coin.width = 10
+             coin.height = 10
+
+
     def scroll_to_player(self, speed=CAMERA_SPEED):
         """
         Scroll the window to the player.
@@ -244,6 +305,50 @@ class MyGame(arcade.Window):
         self.camera_sprites.resize(width, height)
         self.camera_gui.resize(width, height)
         self.shadertoy.resize((width, height))
+
+
+class Coin(arcade.Sprite):
+    """
+    This class represents the coins on our screen. It is a child class of
+    the arcade library's "Sprite" class.
+    """
+    def __init__(self, filename, scale):
+        super().__init__(filename, scale)
+        # Flip this once the coin has been collected.
+        self.followed = False
+
+        # Current angle in radians
+        self.circle_angle = 0
+
+        # How far away from the center to orbit, in pixels
+        self.circle_radius = 0
+
+        # How fast to orbit, in radians per frame
+        self.circle_speed = 0
+
+        # Set the center of the point we will orbit around
+        self.circle_center_x = 0
+        self.circle_center_y = 0
+
+        self.random_center = 0
+        self.random_speed = 0
+
+    def giro(self, player_sprite, random_center, random_speed):
+        self.circle_center_x = player_sprite.center_x + random_center
+        self.circle_center_y = player_sprite.center_y + random_center
+        self.circle_speed = random_speed
+
+    def update(self):
+
+        """ Update the ball's position. """
+        # Calculate a new x, y
+        self.center_x = self.circle_radius * math.sin(self.circle_angle) \
+            + self.circle_center_x
+        self.center_y = self.circle_radius * math.cos(self.circle_angle) \
+            + self.circle_center_y
+
+        # Increase the angle in prep for the next round.
+        self.circle_angle += self.circle_speed 
 
 
 if __name__ == "__main__":
