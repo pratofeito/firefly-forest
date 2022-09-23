@@ -10,15 +10,23 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Ray-casting Demo"
 
-SPRITE_SCALING = 0.25
+SPRITE_SCALING = 0.4
 
 # How fast the camera pans to the player. 1.0 is instant.
 CAMERA_SPEED = 0.1
 
-PLAYER_MOVEMENT_SPEED = 7
-BOMB_COUNT = 70
+PLAYER_MOVEMENT_SPEED = 5
 PLAYING_FIELD_WIDTH = 1600
 PLAYING_FIELD_HEIGHT = 1600
+
+class Collectable(arcade.Sprite):
+    """ This class represents something the player collects. """
+
+    def __init__(self, filename, scale):
+        super().__init__(filename, scale)
+        # Flip this once the coin has been collected.
+
+        self.changed = False
 
 
 class MyGame(arcade.Window):
@@ -36,7 +44,7 @@ class MyGame(arcade.Window):
         self.player_sprite = None
         self.wall_list = arcade.SpriteList()
         self.player_list = arcade.SpriteList()
-        self.bomb_list = arcade.SpriteList()
+        self.bomb_list = None
         self.physics_engine = None
 
         # Create cameras used for scrolling
@@ -46,7 +54,21 @@ class MyGame(arcade.Window):
         self.generate_sprites()
 
         # Our sample GUI text
-        self.score_text = arcade.Text("Score: 0", 10, 10, arcade.color.WHITE, 24)
+        self.score = 0
+        self.bomb_list = arcade.SpriteList()
+
+        for i in range(50):
+            # Create the coin instance
+            bomb = Collectable(":resources:images/items/coinGold.png", SPRITE_SCALING)
+            bomb.width = 30
+            bomb.height = 30
+
+            # Position the coin
+            bomb.center_x = random.randrange(SCREEN_WIDTH)
+            bomb.center_y = random.randrange(SCREEN_HEIGHT)
+
+            # Add the coin to the lists
+            self.bomb_list.append(bomb)
 
         arcade.set_background_color(arcade.color.ARMY_GREEN)
 
@@ -83,17 +105,6 @@ class MyGame(arcade.Window):
                     wall.center_x = x
                     wall.center_y = y
                     self.wall_list.append(wall)
-
-        # -- Set some hidden bombs in the area
-        for i in range(BOMB_COUNT):
-            bomb = arcade.Sprite(":resources:images/tiles/bomb.png", 0.25)
-            placed = False
-            while not placed:
-                bomb.center_x = random.randrange(PLAYING_FIELD_WIDTH)
-                bomb.center_y = random.randrange(PLAYING_FIELD_HEIGHT)
-                if not arcade.check_for_collision_with_list(bomb, self.wall_list):
-                    placed = True
-            self.bomb_list.append(bomb)
 
         # Create the player
         self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
@@ -151,7 +162,8 @@ class MyGame(arcade.Window):
         # Switch to the un-scrolled camera to draw the GUI with
         self.camera_gui.use()
         # Draw our sample GUI text
-        self.score_text.draw()
+        output = f"Score: {self.score}"
+        arcade.draw_text(output, 10, 20, arcade.color.WHITE, 14)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
@@ -181,6 +193,20 @@ class MyGame(arcade.Window):
         self.physics_engine.update()
         # Scroll the screen to the player
         self.scroll_to_player()
+        self.bomb_list.update()
+
+        hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.bomb_list)
+
+        for bomb in hit_list:
+            # Have we collected this?
+            if not bomb.changed:
+                # No? Then do so
+                bomb.append_texture(arcade.load_texture(":resources:images/pinball/bumper.png"))
+                bomb.set_texture(1)
+                bomb.changed = True
+                bomb.width = 30
+                bomb.height = 30
+                self.score += 1
 
     def scroll_to_player(self, speed=CAMERA_SPEED):
         """
