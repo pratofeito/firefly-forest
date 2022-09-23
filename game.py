@@ -7,7 +7,7 @@ import arcade
 from arcade.experimental import Shadertoy
 
 # Escala geral
-SCALE = 0.8
+SCALE = 0.5
 
 # Do the math to figure out our screen dimensions
 SCREEN_WIDTH = 1080
@@ -41,10 +41,11 @@ class MyGame(arcade.Window):
         self.player_list = arcade.SpriteList()
         self.second_player_list = arcade.SpriteList()
         self.physics_engine = None
+        self.cara = None
 
         # luzes
         self.player_light_status = True
-        self.player_light_max_intensity = 300
+        self.player_light_max_intensity = 700
         self.player_light_intensity = self.player_light_max_intensity
 
         # Create cameras used for scrolling
@@ -80,14 +81,14 @@ class MyGame(arcade.Window):
 
     def generate_sprites(self):
         # Lê tiles do arquivo e coloca na matriz de posições
-        with open('mapa.csv') as f:
+        with open('map.csv') as f:
             reader = csv.reader(f)
             matrix = [row for row in reader]
         
         # Desenha as paredes
         for x in range (0, len(matrix), 1):
             for y in range (0, len(matrix[0]), 1):
-                if (matrix[x][y] == '0'):
+                if (matrix[y][x] != '-1'):
                     wall = arcade.Sprite(":resources:images/tiles/boxCrate_double.png", SPRITE_SCALING)
                     wall.center_x = x * 128 * SPRITE_SCALING
                     wall.center_y = y * 128 * SPRITE_SCALING
@@ -96,8 +97,8 @@ class MyGame(arcade.Window):
         # Create the player
         self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
                                            scale=SPRITE_SCALING)
-        self.player_sprite.center_x = 256
-        self.player_sprite.center_y = 512
+        self.player_sprite.center_x = 2560 * SCALE
+        self.player_sprite.center_y = 256 * SCALE
         self.player_list.append(self.player_sprite)
 
         # Cria o segundo player
