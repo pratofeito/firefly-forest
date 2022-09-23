@@ -17,10 +17,12 @@ import math
 import os
 
 # --- Constants ---
+SPRITE_SCALING = 0.5
+
 SPRITE_SCALING_PLAYER = 0.5
 SPRITE_SCALING_COIN = 0.2
 PLAYER_MOVEMENT_SPEED = 5
-COIN_COUNT = 1
+COIN_COUNT = 10
 COIN_SPEED = 15
 
 SPRITE_SCALING = 0.4
@@ -56,11 +58,15 @@ class Coin(arcade.Sprite):
         self.circle_center_x = 0
         self.circle_center_y = 0
 
-    def girar(self, player_sprite):
-        self.circle_center_x = player_sprite.center_x + 10
-        self.circle_center_y = player_sprite.center_y + 10
+        self.random_center = 0
+        self.random_speed = 0
 
-        self.circle_speed = 0
+    def giro(self, player_sprite, random_center, random_speed):
+        self.circle_center_x = player_sprite.center_x + random_center
+        self.circle_center_y = player_sprite.center_y + random_center
+        self.circle_speed = random_speed
+
+    def update(self):
 
         """ Update the ball's position. """
         # Calculate a new x, y
@@ -69,30 +75,8 @@ class Coin(arcade.Sprite):
         self.center_y = self.circle_radius * math.cos(self.circle_angle) \
             + self.circle_center_y
 
-        self.circle_radius = random.randrange(10, 50)
-        self.circle_angle = random.random() * 2 * math.pi
-
         # Increase the angle in prep for the next round.
-        self.circle_angle += self.circle_speed
-
-    def follow_sprite(self, player_sprite):
-        self.center_x += self.change_x
-        self.center_y += self.change_y
-
-        if self.center_y < player_sprite.center_y:
-            self.center_y += min(SPRITE_SPEED, player_sprite.center_y - self.center_y + 20)
-            self.circle_center_y = min(SPRITE_SPEED, player_sprite.center_y - self.center_y + 20)
-        elif self.center_y > player_sprite.center_y:
-            self.center_y -= min(SPRITE_SPEED, self.center_y - player_sprite.center_y - 20)
-            self.circle_center_y = min(SPRITE_SPEED, self.center_y - player_sprite.center_y - 20)
-
-        if self.center_x < player_sprite.center_x:
-            self.center_x += min(SPRITE_SPEED, player_sprite.center_x - self.center_x)
-            self.circle_center_x = min(SPRITE_SPEED, player_sprite.center_x - self.center_x)
-        elif self.center_x > player_sprite.center_x:
-            self.center_x -= min(SPRITE_SPEED, self.center_x - player_sprite.center_x)
-            self.circle_center_x = min(SPRITE_SPEED, self.center_x - player_sprite.center_x)
-
+        self.circle_angle += self.circle_speed 
 
 class MyGame(arcade.Window):
     """ Our custom Window Class"""
@@ -155,11 +139,21 @@ class MyGame(arcade.Window):
         for i in range(COIN_COUNT):
             # Create the coin instance
             # Coin image from kenney.nl
-            coin = Coin(":resources:images/items/coinGold.png", SPRITE_SCALING_COIN)
+            coin = Coin(":resources:images/items/coinGold.png", SPRITE_SCALING / 3)
 
-            # Position the coin
-            coin.center_x = random.randrange(SCREEN_WIDTH)
-            coin.center_y = random.randrange(SCREEN_HEIGHT)
+            # Position the center of the circle the coin will orbit
+            coin.circle_center_x = random.randrange(SCREEN_WIDTH)
+            coin.circle_center_y = random.randrange(SCREEN_HEIGHT)
+
+            coin.random_center = random.randrange(0, 20)
+            coin.random_speed = random.randrange(1, 10)/100
+
+
+            # Random radius from 10 to 200
+            coin.circle_radius = random.randrange(10, 50)
+
+            # Random start angle from 0 to 2pi
+            coin.circle_angle = random.random() * 2 * math.pi
 
             # Add the coin to the lists
             self.coin_list.append(coin)
@@ -204,19 +198,14 @@ class MyGame(arcade.Window):
 
         # Generate a list of all sprites that collided with the player.
         hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
-
         for coin in hit_list:
             coin.followed = True
 
-        
         for coin in self.coin_list:
             if coin.followed == True:
-                # coin.follow_sprite(self.player_sprite)
-                coin.girar(self.player_sprite)
-                coin.append_texture(arcade.load_texture(":resources:images/pinball/bumper.png"))
-                coin.set_texture(1)
-                coin.width = 10
-                coin.height = 10
+             coin.giro(self.player_sprite, coin.random_center, coin.random_speed)
+             coin.width = 10
+             coin.height = 10
 
         # Loop through each colliding sprite, remove it, and add to the score.
         # for coin in hit_list:
