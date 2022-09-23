@@ -19,7 +19,7 @@ SPRITE_SCALING = SCALE
 # How fast the camera pans to the player. 1.0 is instant.
 CAMERA_SPEED = 0.1
 
-PLAYER_MOVEMENT_SPEED = 4 * SPRITE_SCALING * 2
+PLAYER_MOVEMENT_SPEED = 10 * SPRITE_SCALING * 2
 PLAYING_FIELD_WIDTH = 1600
 PLAYING_FIELD_HEIGHT = 1600
 
@@ -34,6 +34,9 @@ class MyGame(arcade.Window):
         self.channel0 = None
         self.channel1 = None
         self.load_shader()
+
+        # Timer
+        self.timer = 0
 
         # Don't show the mouse cursor
         self.set_mouse_visible(False)
@@ -52,8 +55,19 @@ class MyGame(arcade.Window):
         self.player_light_max_intensity = 700
         self.player_light_intensity = self.player_light_max_intensity
 
+        # Memorias
+        self.memories_list = arcade.SpriteList()
+        self.flower_sprite = arcade.Sprite()
+        self.book_sprite = arcade.Sprite()
+        self.picture = arcade.Sprite()
+        self.tutu = arcade.Sprite()
+        self.violin = arcade.Sprite()
+
         # cara
         self.cara = None
+
+        # Portrait
+        self.portrait = None
 
         # vagalumes
         self.coin_list = None
@@ -62,9 +76,13 @@ class MyGame(arcade.Window):
         self.camera_sprites = arcade.Camera(width, height)
         self.camera_gui = arcade.Camera(width, height)
 
+        # Sons
+        # vagalume_audio = arcade.load_sound('ball.wav', False)
+        # arcade.play_sound(vagalume_audio, 1.0, 0, False)
+
         self.generate_sprites()
 
-        arcade.set_background_color(arcade.color.AMAZON)
+        arcade.set_background_color(arcade.color.GRAY)
 
     def load_shader(self):
         # Where is the shader file? Must be specified as a path.
@@ -105,8 +123,8 @@ class MyGame(arcade.Window):
                     self.wall_list.append(wall)
 
         # Create the player
-        self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
-                                           scale=SPRITE_SCALING)
+        self.player_sprite = arcade.Sprite("resources/player.png",
+                                           scale=SPRITE_SCALING * 2)
         self.player_sprite.center_x = 2560 * SCALE
         self.player_sprite.center_y = 256 * SCALE
         self.player_list.append(self.player_sprite)
@@ -117,6 +135,17 @@ class MyGame(arcade.Window):
         self.second_player.center_x = 320
         self.second_player.center_y = 320
         self.second_player_list.append(self.second_player)
+
+        # Create memories
+        self.flower_sprite = arcade.Sprite("resources/spr_flower.png",
+                                           scale=SPRITE_SCALING * 2)
+        self.flower_sprite.center_x = 320 # 2560 * SCALE
+        self.flower_sprite.center_y = 320 #300 * SCALE
+
+        # coin_1.circle_center_x = 2560 * SCALE
+        # coin_1.circle_center_y = 300 * SCALE
+
+        self.memories_list.append(self.flower_sprite)
 
         # Physics engine, so we don't run into walls
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
@@ -152,6 +181,23 @@ class MyGame(arcade.Window):
         self.coin_list.append(coin_2)
 
     def on_draw(self):
+
+        # Use our scrolled camera
+        if(self.timer < 200):
+            self.portrait = arcade.Sprite("resources/neutral.png",
+                                          scale=SPRITE_SCALING)
+        elif(self.timer < 1000):
+            self.portrait = arcade.Sprite("resources/afraid.png",
+                                          scale=SPRITE_SCALING)
+        elif(self.timer < 3000):
+            self.portrait = arcade.Sprite("resources/stress.png",
+                                          scale=SPRITE_SCALING)
+        elif(self.timer < 10000):
+            arcade.close_window()
+
+        # memories
+        self.memories_list.draw()
+
         # Use our scrolled camera
         self.camera_sprites.use()
 
@@ -218,10 +264,10 @@ class MyGame(arcade.Window):
         self.shadertoy.program['light_size_6'] = 70
         
         # Run the shader and render to the window
-        self.shadertoy.render() # aqui !!!!
+        # self.shadertoy.render() # aqui !!!!
 
         # Draw the walls
-        # self.wall_list.draw()
+        self.wall_list.draw()
 
         # Draw the player
         self.player_list.draw()
@@ -231,9 +277,9 @@ class MyGame(arcade.Window):
         self.coin_list.draw()
 
         # cara
-        self.cara.center_x = self.camera_sprites.position[0]
-        self.cara.center_y = self.camera_sprites.position[1]
-        self.cara.draw()
+        self.portrait.center_x = self.camera_sprites.position[0] + 160
+        self.portrait.center_y = self.camera_sprites.position[1] + 160
+        self.portrait.draw()
 
         # Switch to the un-scrolled camera to draw the GUI with
         self.camera_gui.use()
@@ -266,6 +312,9 @@ class MyGame(arcade.Window):
     def on_update(self, delta_time):
         """ Movement and game logic """
 
+        # timer
+        self.timer = self.timer + 1
+
         # Call update on all sprites (The sprites don't do much in this
         # example though.)
         self.physics_engine.update()
@@ -285,6 +334,7 @@ class MyGame(arcade.Window):
              coin.giro(self.player_sprite, coin.random_center, coin.random_speed)
              coin.width = 10
              coin.height = 10
+
 
 
     def scroll_to_player(self, speed=CAMERA_SPEED):
