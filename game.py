@@ -26,13 +26,16 @@ PLAYING_FIELD_HEIGHT = 1600
 class MyGame(arcade.Window):
 
     def __init__(self, width, height, title):
-        super().__init__(width, height, title, resizable=False, fullscreen = True)
+        super().__init__(width, height, title, resizable=False, fullscreen=True)
 
         # The shader toy and 'channels' we'll be using
         self.shadertoy = None
         self.channel0 = None
         self.channel1 = None
         self.load_shader()
+
+        # Timer
+        self.timer = 0
 
         # Sprites and sprite lists
         self.player_sprite = None
@@ -41,15 +44,22 @@ class MyGame(arcade.Window):
         self.player_list = arcade.SpriteList()
         self.second_player_list = arcade.SpriteList()
         self.physics_engine = None
-        self.cara = None
+
+        # Memorias
+        self.memories_list = arcade.SpriteList()
+        self.flower_sprite = arcade.Sprite()
+        self.book_sprite = arcade.Sprite()
+        self.picture = arcade.Sprite()
+        self.tutu = arcade.Sprite()
+        self.violin = arcade.Sprite()
 
         # luzes
         self.player_light_status = True
         self.player_light_max_intensity = 700
         self.player_light_intensity = self.player_light_max_intensity
 
-        # cara
-        self.cara = None
+        # Portrait
+        self.portrait = None
 
         # Create cameras used for scrolling
         self.camera_sprites = arcade.Camera(width, height)
@@ -67,15 +77,18 @@ class MyGame(arcade.Window):
         window_size = self.get_size()
 
         # Create the shader toy
-        self.shadertoy = Shadertoy.create_from_file(window_size, shader_file_path)
+        self.shadertoy = Shadertoy.create_from_file(
+            window_size, shader_file_path)
 
         # Create the channels 0 and 1 frame buffers.
         # Make the buffer the size of the window, with 4 channels (RGBA)
         self.channel0 = self.shadertoy.ctx.framebuffer(
-            color_attachments=[self.shadertoy.ctx.texture(window_size, components=4)]
+            color_attachments=[self.shadertoy.ctx.texture(
+                window_size, components=4)]
         )
         self.channel1 = self.shadertoy.ctx.framebuffer(
-            color_attachments=[self.shadertoy.ctx.texture(window_size, components=4)]
+            color_attachments=[self.shadertoy.ctx.texture(
+                window_size, components=4)]
         )
 
         # Assign the frame buffers to the channels
@@ -87,19 +100,20 @@ class MyGame(arcade.Window):
         with open('map.csv') as f:
             reader = csv.reader(f)
             matrix = [row for row in reader]
-        
+
         # Desenha as paredes
-        for x in range (0, len(matrix), 1):
-            for y in range (0, len(matrix[0]), 1):
+        for x in range(0, len(matrix), 1):
+            for y in range(0, len(matrix[0]), 1):
                 if (matrix[y][x] != '-1'):
-                    wall = arcade.Sprite(":resources:images/tiles/boxCrate_double.png", SPRITE_SCALING)
+                    wall = arcade.Sprite(
+                        ":resources:images/tiles/boxCrate_double.png", SPRITE_SCALING)
                     wall.center_x = x * 128 * SPRITE_SCALING
                     wall.center_y = y * 128 * SPRITE_SCALING
                     self.wall_list.append(wall)
 
         # Create the player
-        self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
-                                           scale=SPRITE_SCALING)
+        self.player_sprite = arcade.Sprite("resources/player.png",
+                                           scale=SPRITE_SCALING * 2)
         self.player_sprite.center_x = 2560 * SCALE
         self.player_sprite.center_y = 256 * SCALE
         self.player_list.append(self.player_sprite)
@@ -111,26 +125,46 @@ class MyGame(arcade.Window):
         self.second_player.center_y = 320
         self.second_player_list.append(self.second_player)
 
+        # Create memories
+        self.flower_sprite = arcade.Sprite("resources/spr_flower.png",
+                                           scale=SPRITE_SCALING * 2)
+        self.flower_sprite.center_x = 300
+        self.flower_sprite.center_y = 320
+
+        self.memories_list.append(self.flower_sprite)
+
         # Physics engine, so we don't run into walls
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
+        self.physics_engine = arcade.PhysicsEngineSimple(
+            self.player_sprite, self.wall_list)
 
         # Start centered on the player
         self.scroll_to_player(1.0)
         self.camera_sprites.update()
 
         # cara
-        self.cara = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
-                                           scale=SPRITE_SCALING*10)
 
     def on_draw(self):
         # Use our scrolled camera
+        if(self.timer < 200):
+            self.portrait = arcade.Sprite("resources/neutral.png",
+                                          scale=SPRITE_SCALING)
+        elif(self.timer < 400):
+            self.portrait = arcade.Sprite("resources/afraid.png",
+                                          scale=SPRITE_SCALING)
+        elif(self.timer < 1000):
+            self.portrait = arcade.Sprite("resources/stress.png",
+                                          scale=SPRITE_SCALING)
+        elif(self.timer < 1600):
+            arcade.close_window()
+
         self.camera_sprites.use()
 
         # Select the channel 0 frame buffer to draw on
         self.channel0.use()
         self.channel0.clear()
-        # Draw the walls
+        # Draw the walls an memories
         self.wall_list.draw()
+        self.memories_list.draw()
 
         self.channel1.use()
         self.channel1.clear()
@@ -146,16 +180,15 @@ class MyGame(arcade.Window):
              self.player_sprite.position[1] - self.camera_sprites.position[1])
 
         p2 = (200 - self.camera_sprites.position[0],
-             300 - self.camera_sprites.position[1])
+              300 - self.camera_sprites.position[1])
 
         p3 = (500 - self.camera_sprites.position[0],
-             300 - self.camera_sprites.position[1])
-        
+              300 - self.camera_sprites.position[1])
+
         p4 = (0 - self.camera_sprites.position[0],
-             300 - self.camera_sprites.position[1])
+              300 - self.camera_sprites.position[1])
 
-
-        #diminui a intensidade da luz do player
+        # diminui a intensidade da luz do player
         light_step = 50
         if (self.player_light_status == True):
             if(self.player_light_intensity != self.player_light_max_intensity):
@@ -166,16 +199,16 @@ class MyGame(arcade.Window):
 
         # Set the uniform data
         self.shadertoy.program['light_1'] = p
-        self.shadertoy.program['light_2'] = p2   
+        self.shadertoy.program['light_2'] = p2
         self.shadertoy.program['light_3'] = p3
         self.shadertoy.program['light_4'] = p4
         self.shadertoy.program['light_size_1'] = self.player_light_intensity
         self.shadertoy.program['light_size_2'] = 100
         self.shadertoy.program['light_size_3'] = 200
         self.shadertoy.program['light_size_4'] = 50
-        
+
         # Run the shader and render to the window
-        self.shadertoy.render() # aqui !!!!
+        self.shadertoy.render()  # aqui !!!!
 
         # Draw the walls
         # self.wall_list.draw()
@@ -185,9 +218,9 @@ class MyGame(arcade.Window):
         self.second_player_list.draw()
 
         # cara
-        self.cara.center_x = self.camera_sprites.position[0]
-        self.cara.center_y = self.camera_sprites.position[1]
-        self.cara.draw()
+        self.portrait.center_x = self.camera_sprites.position[0] + 160
+        self.portrait.center_y = self.camera_sprites.position[1] + 160
+        self.portrait.draw()
 
         # Switch to the un-scrolled camera to draw the GUI with
         self.camera_gui.use()
@@ -208,6 +241,9 @@ class MyGame(arcade.Window):
                 self.player_light_status = False
             else:
                 self.player_light_status = True
+        elif key == arcade.key.SPACE:
+            if arcade.check_for_collision_with_list(self.player_sprite, self.memories_list):
+                print("Vai Brasil!!")
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
@@ -219,7 +255,7 @@ class MyGame(arcade.Window):
 
     def on_update(self, delta_time):
         """ Movement and game logic """
-
+        self.timer = self.timer + 1
         # Call update on all sprites (The sprites don't do much in this
         # example though.)
         self.physics_engine.update()
