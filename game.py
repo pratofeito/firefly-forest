@@ -48,6 +48,9 @@ class MyGame(arcade.Window):
         self.player_light_max_intensity = 700
         self.player_light_intensity = self.player_light_max_intensity
 
+        # cara
+        self.cara = None
+
         # Create cameras used for scrolling
         self.camera_sprites = arcade.Camera(width, height)
         self.camera_gui = arcade.Camera(width, height)
@@ -115,6 +118,10 @@ class MyGame(arcade.Window):
         self.scroll_to_player(1.0)
         self.camera_sprites.update()
 
+        # cara
+        self.cara = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
+                                           scale=SPRITE_SCALING*10)
+
     def on_draw(self):
         # Use our scrolled camera
         self.camera_sprites.use()
@@ -144,7 +151,7 @@ class MyGame(arcade.Window):
         p3 = (500 - self.camera_sprites.position[0],
              300 - self.camera_sprites.position[1])
         
-        p4 = (800 - self.camera_sprites.position[0],
+        p4 = (0 - self.camera_sprites.position[0],
              300 - self.camera_sprites.position[1])
 
 
@@ -165,7 +172,7 @@ class MyGame(arcade.Window):
         self.shadertoy.program['light_size_1'] = self.player_light_intensity
         self.shadertoy.program['light_size_2'] = 100
         self.shadertoy.program['light_size_3'] = 200
-        self.shadertoy.program['light_size_4'] = 300
+        self.shadertoy.program['light_size_4'] = 50
         
         # Run the shader and render to the window
         self.shadertoy.render() # aqui !!!!
@@ -176,6 +183,11 @@ class MyGame(arcade.Window):
         # Draw the player
         self.player_list.draw()
         self.second_player_list.draw()
+
+        # cara
+        self.cara.center_x = self.camera_sprites.position[0]
+        self.cara.center_y = self.camera_sprites.position[1]
+        self.cara.draw()
 
         # Switch to the un-scrolled camera to draw the GUI with
         self.camera_gui.use()
