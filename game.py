@@ -18,7 +18,7 @@ SPRITE_SCALING = SCALE
 # How fast the camera pans to the player. 1.0 is instant.
 CAMERA_SPEED = 0.1
 
-PLAYER_MOVEMENT_SPEED = 4 * SPRITE_SCALING
+PLAYER_MOVEMENT_SPEED = 4 * SPRITE_SCALING * 2
 PLAYING_FIELD_WIDTH = 1600
 PLAYING_FIELD_HEIGHT = 1600
 
@@ -36,9 +36,16 @@ class MyGame(arcade.Window):
 
         # Sprites and sprite lists
         self.player_sprite = None
+        self.second_player = None
         self.wall_list = arcade.SpriteList()
         self.player_list = arcade.SpriteList()
+        self.second_player_list = arcade.SpriteList()
         self.physics_engine = None
+
+        # luzes
+        self.player_light_status = True
+        self.player_light_max_intensity = 300
+        self.player_light_intensity = self.player_light_max_intensity
 
         # Create cameras used for scrolling
         self.camera_sprites = arcade.Camera(width, height)
@@ -46,7 +53,7 @@ class MyGame(arcade.Window):
 
         self.generate_sprites()
 
-        arcade.set_background_color(arcade.color.ARMY_GREEN)
+        arcade.set_background_color(arcade.color.GRAY)
 
     def load_shader(self):
         # Where is the shader file? Must be specified as a path.
@@ -73,7 +80,7 @@ class MyGame(arcade.Window):
 
     def generate_sprites(self):
         # Lê tiles do arquivo e coloca na matriz de posições
-        with open('mapa2.csv') as f:
+        with open('mapa.csv') as f:
             reader = csv.reader(f)
             matrix = [row for row in reader]
         
@@ -93,13 +100,19 @@ class MyGame(arcade.Window):
         self.player_sprite.center_y = 512
         self.player_list.append(self.player_sprite)
 
+        # Cria o segundo player
+        self.second_player = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
+                                           scale=SPRITE_SCALING)
+        self.second_player.center_x = 320
+        self.second_player.center_y = 320
+        self.second_player_list.append(self.second_player)
+
         # Physics engine, so we don't run into walls
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
 
         # Start centered on the player
         self.scroll_to_player(1.0)
         self.camera_sprites.update()
-
 
     def on_draw(self):
         # Use our scrolled camera
@@ -124,22 +137,47 @@ class MyGame(arcade.Window):
         p = (self.player_sprite.position[0] - self.camera_sprites.position[0],
              self.player_sprite.position[1] - self.camera_sprites.position[1])
 
-        # Set the uniform data
-        self.shadertoy.program['lightPosition'] = p
-        self.shadertoy.program['lightSize'] = 300
+        p2 = (200 - self.camera_sprites.position[0],
+             300 - self.camera_sprites.position[1])
 
+        p3 = (500 - self.camera_sprites.position[0],
+             300 - self.camera_sprites.position[1])
+        
+        p4 = (800 - self.camera_sprites.position[0],
+             300 - self.camera_sprites.position[1])
+
+
+        #diminui a intensidade da luz do player
+        light_step = 50
+        if (self.player_light_status == True):
+            if(self.player_light_intensity != self.player_light_max_intensity):
+                self.player_light_intensity += light_step
+        else:
+            if(self.player_light_intensity != 0):
+                self.player_light_intensity -= light_step
+
+        # Set the uniform data
+        self.shadertoy.program['light_1'] = p
+        self.shadertoy.program['light_2'] = p2   
+        self.shadertoy.program['light_3'] = p3
+        self.shadertoy.program['light_4'] = p4
+        self.shadertoy.program['light_size_1'] = self.player_light_intensity
+        self.shadertoy.program['light_size_2'] = 100
+        self.shadertoy.program['light_size_3'] = 200
+        self.shadertoy.program['light_size_4'] = 300
+        
         # Run the shader and render to the window
-        # self.shadertoy.render() # aqui !!!!
+        self.shadertoy.render() # aqui !!!!
 
         # Draw the walls
-        self.wall_list.draw()
+        # self.wall_list.draw()
 
         # Draw the player
         self.player_list.draw()
+        self.second_player_list.draw()
 
         # Switch to the un-scrolled camera to draw the GUI with
         self.camera_gui.use()
-        # Draw our sample GUI text
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed. """
@@ -152,6 +190,11 @@ class MyGame(arcade.Window):
             self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.RIGHT:
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+        elif key == arcade.key.S:
+            if (self.player_light_status == True):
+                self.player_light_status = False
+            else:
+                self.player_light_status = True
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
