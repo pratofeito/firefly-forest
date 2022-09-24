@@ -19,7 +19,7 @@ SPRITE_SCALING = SCALE
 # How fast the camera pans to the player. 1.0 is instant.
 CAMERA_SPEED = 0.1
 
-PLAYER_MOVEMENT_SPEED = 10 * SPRITE_SCALING * 2
+PLAYER_MOVEMENT_SPEED = 4 * SPRITE_SCALING * 2
 PLAYING_FIELD_WIDTH = 1600
 PLAYING_FIELD_HEIGHT = 1600
 
@@ -50,8 +50,11 @@ class MyGame(arcade.Window):
         self.physics_engine = None
         self.cara = None
 
+        # fogueira
+        self.fogueira = None
+
         # luzes
-        self.player_light_status = True
+        self.player_light_status = False
         self.player_light_max_intensity = 700
         self.player_light_intensity = self.player_light_max_intensity
 
@@ -139,13 +142,46 @@ class MyGame(arcade.Window):
         # Create memories
         self.flower_sprite = arcade.Sprite("resources/spr_flower.png",
                                            scale=SPRITE_SCALING * 2)
-        self.flower_sprite.center_x = 320 # 2560 * SCALE
-        self.flower_sprite.center_y = 320 #300 * SCALE
+        self.flower_sprite.center_x = 6 * 128 * SCALE
+        self.flower_sprite.center_y = 28 * 128 * SCALE
 
-        # coin_1.circle_center_x = 2560 * SCALE
-        # coin_1.circle_center_y = 300 * SCALE
+        self.picture = arcade.Sprite("resources/spr_polaroid.png",
+                                           scale=SPRITE_SCALING * 2)
+        self.picture.center_x = 22 * 128 * SCALE
+        self.picture.center_y = 33 * 128 * SCALE
+
+        self.book_sprite = arcade.Sprite("resources/spr_book.png",
+                                           scale=SPRITE_SCALING * 2)
+        self.book_sprite.center_x = 33 * 128 * SCALE - 40
+        self.book_sprite.center_y = 6 * 128 * SCALE
+
+        self.violin = arcade.Sprite("resources/violino.png",
+                                           scale=SPRITE_SCALING * 2)
+        self.violin.center_x = 2 * 128 * SCALE
+        self.violin.center_y = 15 * 128 * SCALE
+
+        self.tutu = arcade.Sprite("resources/tutu_sprite.png",
+                                           scale=SPRITE_SCALING * 2)
+        self.tutu.center_x = 10 * 128 * SCALE
+        self.tutu.center_y = 23 * 128 * SCALE
+
+        self.bell = arcade.Sprite("resources/sino.png",
+                                           scale=SPRITE_SCALING * 2)
+        self.bell.center_x = 34 * 128 * SCALE
+        self.bell.center_y = 20 * 128 * SCALE
 
         self.memories_list.append(self.flower_sprite)
+        self.memories_list.append(self.picture)
+        self.memories_list.append(self.book_sprite)
+        self.memories_list.append(self.violin)
+        self.memories_list.append(self.tutu)
+        self.memories_list.append(self.bell)
+
+        # fogueira
+        self.fogueira = arcade.Sprite("resources/fogueira.png",
+                                           scale=SPRITE_SCALING)
+        self.fogueira.center_x = 1300
+        self.fogueira.center_y = 1300
 
         # Physics engine, so we don't run into walls
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
@@ -163,18 +199,18 @@ class MyGame(arcade.Window):
         coin_1 = Coin(":resources:images/items/coinGold.png", SPRITE_SCALING / 3)
         coin_2 = Coin(":resources:images/items/coinGold.png", SPRITE_SCALING / 3)
         
-        coin_1.circle_center_x = 2560 * SCALE
-        coin_1.circle_center_y = 300 * SCALE
+        coin_1.circle_center_x = 2000 * SCALE
+        coin_1.circle_center_y = 280 * SCALE
         coin_2.circle_center_x = 2560 * SCALE
         coin_2.circle_center_y = 600 * SCALE
 
         coin_1.random_center = random.randrange(0, 20)
-        coin_1.random_speed = random.randrange(1, 10)/100
-        coin_1.circle_radius = random.randrange(30, 50)
+        coin_1.random_speed = random.randrange(5, 10)/100
+        coin_1.circle_radius = random.randrange(40, 60)
         coin_1.circle_angle = random.random() * 2 * math.pi
         coin_2.random_center = random.randrange(0, 20)
-        coin_2.random_speed = random.randrange(1, 10)/100
-        coin_2.circle_radius = random.randrange(30, 50)
+        coin_2.random_speed = random.randrange(5, 10)/100
+        coin_2.circle_radius = random.randrange(40, 60)
         coin_2.circle_angle = random.random() * 2 * math.pi
 
         self.coin_list.append(coin_1)
@@ -186,17 +222,16 @@ class MyGame(arcade.Window):
         if(self.timer < 200):
             self.portrait = arcade.Sprite("resources/neutral.png",
                                           scale=SPRITE_SCALING)
-        elif(self.timer < 1000):
+        elif(self.timer < 700):
             self.portrait = arcade.Sprite("resources/afraid.png",
                                           scale=SPRITE_SCALING)
-        elif(self.timer < 3000):
+        elif(self.timer < 1500):
             self.portrait = arcade.Sprite("resources/stress.png",
                                           scale=SPRITE_SCALING)
-        elif(self.timer < 10000):
-            arcade.close_window()
+        # elif(self.timer < 1000000):
+        #     # arcade.close_window()
+        #     print("fim!")
 
-        # memories
-        self.memories_list.draw()
 
         # Use our scrolled camera
         self.camera_sprites.use()
@@ -236,6 +271,26 @@ class MyGame(arcade.Window):
         p6 = (self.coin_list[1].position[0] - self.camera_sprites.position[0],
              self.coin_list[1].position[1] - self.camera_sprites.position[1])
 
+        # itens
+        p7 = (self.memories_list[0].position[0] - self.camera_sprites.position[0],
+             self.memories_list[0].position[1] - self.camera_sprites.position[1])
+        p8 = (self.memories_list[1].position[0] - self.camera_sprites.position[0],
+             self.memories_list[1].position[1] - self.camera_sprites.position[1])
+        p9 = (self.memories_list[2].position[0] - self.camera_sprites.position[0],
+             self.memories_list[2].position[1] - self.camera_sprites.position[1])
+        p10 = (self.memories_list[3].position[0] - self.camera_sprites.position[0],
+             self.memories_list[3].position[1] - self.camera_sprites.position[1])
+        p11 = (self.memories_list[4].position[0] - self.camera_sprites.position[0],
+             self.memories_list[4].position[1] - self.camera_sprites.position[1])
+        p12 = (self.memories_list[5].position[0] - self.camera_sprites.position[0],
+             self.memories_list[5].position[1] - self.camera_sprites.position[1])
+
+        # p14 = (100, 100)
+
+        # fogueira
+        p13 = (1300 - self.camera_sprites.position[0], 1300 - self.camera_sprites.position[1])
+
+
         #diminui a intensidade da luz do player
         light_step = 50
         if (self.player_light_status == True):
@@ -255,26 +310,51 @@ class MyGame(arcade.Window):
         self.shadertoy.program['light_5'] = p5
         self.shadertoy.program['light_6'] = p6
 
+        # itens
+        self.shadertoy.program['light_7'] = p7
+        self.shadertoy.program['light_8'] = p8
+        self.shadertoy.program['light_9'] = p9
+        self.shadertoy.program['light_10'] = p10
+        self.shadertoy.program['light_11'] = p11
+        self.shadertoy.program['light_12'] = p12
+
+        # fogueira
+        self.shadertoy.program['light_13'] = p13
 
         self.shadertoy.program['light_size_1'] = self.player_light_intensity
-        self.shadertoy.program['light_size_2'] = 100
-        self.shadertoy.program['light_size_3'] = 200
-        self.shadertoy.program['light_size_4'] = 50
+        self.shadertoy.program['light_size_2'] = 0
+        self.shadertoy.program['light_size_3'] = 0
+        self.shadertoy.program['light_size_4'] = 0
         self.shadertoy.program['light_size_5'] = 70
         self.shadertoy.program['light_size_6'] = 70
+
+        self.shadertoy.program['light_size_7'] = 100
+        self.shadertoy.program['light_size_8'] = 100
+        self.shadertoy.program['light_size_9'] = 100
+        self.shadertoy.program['light_size_10'] = 100
+        self.shadertoy.program['light_size_11'] = 100
+        self.shadertoy.program['light_size_12'] = 100
+
+        self.shadertoy.program['light_size_13'] = 350
         
         # Run the shader and render to the window
-        # self.shadertoy.render() # aqui !!!!
+        self.shadertoy.render() # aqui !!!!
 
         # Draw the walls
-        self.wall_list.draw()
+        # self.wall_list.draw()
+
+        # memories
+        self.memories_list.draw()
 
         # Draw the player
         self.player_list.draw()
-        self.second_player_list.draw()
+        # self.second_player_list.draw()
 
         # desenha os vagalumes
         self.coin_list.draw()
+
+        # fogueira
+        self.fogueira.draw()
 
         # cara
         self.portrait.center_x = self.camera_sprites.position[0] + 160
@@ -300,6 +380,8 @@ class MyGame(arcade.Window):
                 self.player_light_status = False
             else:
                 self.player_light_status = True
+                audio = arcade.load_sound('bell.mp3')
+                arcade.play_sound(audio, 1.0, -1, False)
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
@@ -326,8 +408,16 @@ class MyGame(arcade.Window):
 
         # Generate a list of all sprites that collided with the player.
         hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
+        hit_memories = arcade.check_for_collision_with_list(self.player_sprite, self.memories_list)
+
+
         for coin in hit_list:
             coin.followed = True
+
+        for item in hit_memories:
+            item.center_x = 5000
+            item.center_y = 5000
+            self.timer = 0
 
         for coin in self.coin_list:
             if coin.followed == True:

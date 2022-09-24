@@ -1,5 +1,5 @@
 #define N 100
-#define OBJS 6
+#define OBJS 13
 
 // x, y position of the light
 uniform vec2 lightPosition;
@@ -14,6 +14,13 @@ uniform vec2 light_3;
 uniform vec2 light_4;
 uniform vec2 light_5;
 uniform vec2 light_6;
+uniform vec2 light_7;
+uniform vec2 light_8;
+uniform vec2 light_9;
+uniform vec2 light_10;
+uniform vec2 light_11;
+uniform vec2 light_12;
+uniform vec2 light_13;
 
 // intensidade das luzes
 uniform float light_size_1;
@@ -22,6 +29,13 @@ uniform float light_size_3;
 uniform float light_size_4;
 uniform float light_size_5;
 uniform float light_size_6;
+uniform float light_size_7;
+uniform float light_size_8;
+uniform float light_size_9;
+uniform float light_size_10;
+uniform float light_size_11;
+uniform float light_size_12;
+uniform float light_size_13;
 
 
 // basicamente verificando as paredes do chanel0
@@ -44,6 +58,13 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     lights[3] = light_4;
     lights[4] = light_5;
     lights[5] = light_6;
+    lights[6] = light_7;
+    lights[7] = light_8;
+    lights[8] = light_9;
+    lights[9] = light_10;
+    lights[10] = light_11;
+    lights[11] = light_12;
+    lights[12] = light_13;
 
     float light_sizes[OBJS];
     light_sizes[0] = light_size_1;
@@ -52,6 +73,13 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     light_sizes[3] = light_size_4;
     light_sizes[4] = light_size_5;
     light_sizes[5] = light_size_6;
+    light_sizes[6] = light_size_7;
+    light_sizes[7] = light_size_8;
+    light_sizes[8] = light_size_9;
+    light_sizes[9] = light_size_10;
+    light_sizes[10] = light_size_11;
+    light_sizes[11] = light_size_12;
+    light_sizes[12] = light_size_13;
 
 
     float distances_light[OBJS];
